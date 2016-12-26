@@ -452,14 +452,14 @@ def train_lstm(
     patience=10,  # Number of epoch to wait before early stop if no progress
     max_epochs=5000,  # The maximum number of epoch to run
     dispFreq=10,  # Display to stdout the training progress every N updates
-    decay_c=0.,  # Weight decay for the classifier applied to the U weights.
+    decay_c=0.005,  # Weight decay for the classifier applied to the U weights.
     lrate=0.0001,  # Learning rate for sgd (not used for adadelta and rmsprop)
     n_words=10000,  # Vocabulary size
     optimizer=adadelta,  # sgd, adadelta and rmsprop available, sgd very hard to use, not recommanded (probably need momentum and decaying learning rate).
     encoder='lstm',  # TODO: can be removed must be lstm.
     saveto='lstm_model.npz',  # The best model will be saved there
-    validFreq=370,  # Compute the validation error after this number of update.
-    saveFreq=1110,  # Save the parameters after every saveFreq updates
+    validFreq=300,  # Compute the validation error after this number of update.
+    saveFreq=300,  # Save the parameters after every saveFreq updates
     maxlen=100,  # Sequence longer then this get ignored
     batch_size=16,  # The batch size during training.
     valid_batch_size=64,  # The batch size used for validation/test set.
@@ -469,7 +469,7 @@ def train_lstm(
     noise_std=0.,
     use_dropout=True,  # if False slightly faster, but worst test error
                        # This frequently need a bigger model.
-    reload_model=None,  # Path to a saved model we want to start from.
+    reload_model=1,  # Path to a saved model we want to start from.
     test_size=-1,  # If >0, we keep only this number of test example.
 ):
 
@@ -548,6 +548,15 @@ def train_lstm(
 
     uidx = 0  # the number of update done
     estop = False  # early stop
+
+    # load the model!
+    print('Loading model!')
+    old_file = open('%s.pkl' % saveto, 'r')
+    if (old_file):
+        params = pickle.load(old_file)
+    else:
+        print('loading failed!')
+
     start_time = time.time()
     try:
         for eidx in range(max_epochs):
@@ -588,7 +597,7 @@ def train_lstm(
                     else:
                         params = unzip(tparams)
                     numpy.savez(saveto, history_errs=history_errs, **params)
-                    pickle.dump(model_options, open('%s.pkl' % saveto, 'wb'), -1)
+                    pickle.dump(params, open('%s.pkl' % saveto, 'wb'))
                     print('Done')
 
                 if numpy.mod(uidx, validFreq) == 0:
@@ -607,8 +616,8 @@ def train_lstm(
                         best_p = unzip(tparams)
                         bad_counter = 0
 
-                    print('Train ', train_err, 'Valid ', valid_err,
-                           'Test ', test_err)
+                    print('Train ', 1-train_err, 'Valid ', 1-valid_err,
+                           'Test ', 1-test_err)
 
                     if (len(history_errs) > patience and
                         valid_err >= numpy.array(history_errs)[:-patience,
