@@ -469,7 +469,7 @@ def train_lstm(
     noise_std=0.,
     use_dropout=True,  # if False slightly faster, but worst test error
                        # This frequently need a bigger model.
-    reload_model=1,  # Path to a saved model we want to start from.
+    reload_model=0,  # Path to a saved model we want to start from.
     test_size=-1,  # If >0, we keep only this number of test example.
 ):
 
@@ -501,7 +501,7 @@ def train_lstm(
     params = init_params(model_options)
 
     if reload_model:
-        load_params('lstm_model.npz', params)
+        load_params('lstm_model.npz.pkl', params)
 
     # This create Theano Shared Variable from the parameters.
     # Dict name (string) -> Theano Tensor Shared Variable
@@ -577,6 +577,10 @@ def train_lstm(
                 # This swap the axis!
                 # Return something of shape (minibatch maxlen, n samples)
                 x, mask, y = prepare_data(x, y)
+                # print(x)
+                # print(y)
+                # print(mask)
+                print(x.shape[1])
                 n_samples += x.shape[1]
 
                 cost = f_grad_shared(x, mask, y)
